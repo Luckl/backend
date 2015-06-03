@@ -2,10 +2,14 @@ package com.leagueprojecto.api.services.riot
 
 import akka.actor.Status.Failure
 import akka.actor.{ActorLogging, ActorRef, Props, Actor}
+import akka.http.client.RequestBuilding
+import akka.http.model.HttpHeader.ParsingResult
+import akka.http.model._
+import akka.http.model.HttpMethods.GET
+import akka.http.unmarshalling.Unmarshal
 import com.leagueprojecto.api.JsonProtocols
 import com.leagueprojecto.api.domain.Summoner
 import com.leagueprojecto.api.services.riot.RiotService.{TooManyRequests, ServiceNotAvailable}
-import com.ning.http.client.{ListenableFuture, Response}
 import spray.json._
 
 object SummonerService {
@@ -22,47 +26,90 @@ class SummonerService extends Actor with ActorLogging with RiotService with Json
     case GetSummonerByName(region, name) =>
       val origSender: ActorRef = sender()
 
-      val future: ListenableFuture[Response] = httpClient.prepareGet(riotApi(region, summonerByName + name))
-        .addQueryParam("api_key", api_key)
-        .execute()
+//      val endpoint1: Uri = endpoint(region, summonerByName + name)
+      val endpoint1 = "/"
 
-      future.addListener(new Runnable {
-        override def run(): Unit = {
-          val response = future.get()
+      //HttpRequest(GET, endpoint1)
+      val future = riotRequest(RequestBuilding.Get(endpoint1))
+      future onSuccess {
+          case response: HttpResponse =>
+            Unmarshal(response.entity).to[String].onSuccess {
+              case result: String =>
+                //val summoner = transform(result)
+                //origSender ! summoner
+              println("########################### " + result)
+            }
+      }
+      future onFailure {
+        case x: Exception =>
+          println("exception")
+          x.printStackTrace()
+      }
 
-          response.getStatusCode match {
-            case 200 =>
-              val result = response
-                .getResponseBody
-                .parseJson
-                .asJsObject
 
-              val summoner = transform(result)
-              origSender ! summoner
+//          case 404 =>
+//            val message = s"No summoner found by name '$name' for region '$region'"
+//            log.warning(message)
+//            origSender ! Failure(new SummonerNotFound(message))
+//
+//          case 429 =>
+//            val message = s"Too many requests"
+//            log.warning(message)
+//            origSender ! Failure(new TooManyRequests(message))
+//
+//          case 503 =>
+//            val message = s"SummonerService not available"
+//            log.warning(message)
+//            origSender ! Failure(new ServiceNotAvailable(message))
+//
+//          case code: Int =>
+//            val message = s"Something went wrong. API call error code: $code"
+//            log.warning(message)
+//            origSender ! Failure(new IllegalStateException(message))
 
-            case 404 =>
-              val message = s"No summoner found by name '$name' for region '$region'"
-              log.warning(message)
-              origSender ! Failure(new SummonerNotFound(message))
+      }
 
-            case 429 =>
-              val message = s"Too many requests"
-              log.warning(message)
-              origSender ! Failure(new TooManyRequests(message))
+//      val future: ListenableFuture[Response] = httpClient.prepareGet(riotApi(region, summonerByName + name))
+//        .addQueryParam("api_key", api_key)
+//        .execute()
 
-            case 503 =>
-              val message = s"SummonerService not available"
-              log.warning(message)
-              origSender ! Failure(new ServiceNotAvailable(message))
-
-            case code: Int =>
-              val message = s"Something went wrong. API call error code: $code"
-              log.warning(message)
-              origSender ! Failure(new IllegalStateException(message))
-          }
-        }
-      }, context.dispatcher)
-  }
+//      future.addListener(new Runnable {
+//        override def run(): Unit = {
+//          val response = future.get()
+//
+//          response.getStatusCode match {
+//            case 200 =>
+//              val result = response
+//                .getResponseBody
+//                .parseJson
+//                .asJsObject
+//
+//              val summoner = transform(result)
+//              origSender ! summoner
+//
+//            case 404 =>
+//              val message = s"No summoner found by name '$name' for region '$region'"
+//              log.warning(message)
+//              origSender ! Failure(new SummonerNotFound(message))
+//
+//            case 429 =>
+//              val message = s"Too many requests"
+//              log.warning(message)
+//              origSender ! Failure(new TooManyRequests(message))
+//
+//            case 503 =>
+//              val message = s"SummonerService not available"
+//              log.warning(message)
+//              origSender ! Failure(new ServiceNotAvailable(message))
+//
+//            case code: Int =>
+//              val message = s"Something went wrong. API call error code: $code"
+//              log.warning(message)
+//              origSender ! Failure(new IllegalStateException(message))
+//          }
+//        }
+//      }, context.dispatcher)
+//  }
 
   private def transform(riotResult: JsObject): Summoner = {
     val firstKey = riotResult.fields.keys.head

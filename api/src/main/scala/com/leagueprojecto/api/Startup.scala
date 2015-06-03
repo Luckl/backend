@@ -37,13 +37,13 @@ object Startup extends App with JsonProtocols {
 
   // Services
   val summonerService: ActorRef = system.actorOf(SummonerService.props)
-  val matchHistoryService: ActorRef = system.actorOf(MatchHistoryService.props)
+//  val matchHistoryService: ActorRef = system.actorOf(MatchHistoryService.props)
 
   // Service caches
   val summonerCacheTime = config.getInt("riot.services.summonerbyname.cacheTime")
   val matchhistoryCacheTime = config.getInt("riot.services.matchhistory.cacheTime")
   val cachedSummonerService: ActorRef     = system.actorOf(CacheService.props[Summoner](summonerService, summonerCacheTime))
-  val cachedMatchHistoryService: ActorRef = system.actorOf(CacheService.props[List[MatchHistory]](matchHistoryService, matchhistoryCacheTime))
+//  val cachedMatchHistoryService: ActorRef = system.actorOf(CacheService.props[List[MatchHistory]](matchHistoryService, matchhistoryCacheTime))
 
   val optionsSupport = {
     options {
@@ -74,17 +74,17 @@ object Startup extends App with JsonProtocols {
     }
   }
 
-  def matchhistoryRoute(implicit region: String) = {
-    pathPrefix("matchhistory" / LongNumber) { summonerId =>
-      pathEndOrSingleSlash {
-        get {
-          complete {
-            (cachedMatchHistoryService ? GetMatchHistory(region, summonerId)).mapTo[CachedResponse[List[MatchHistory]]]
-          }
-        } ~ optionsSupport
-      }
-    }
-  }
+//  def matchhistoryRoute(implicit region: String) = {
+//    pathPrefix("matchhistory" / LongNumber) { summonerId =>
+//      pathEndOrSingleSlash {
+//        get {
+//          complete {
+//            (cachedMatchHistoryService ? GetMatchHistory(region, summonerId)).mapTo[CachedResponse[List[MatchHistory]]]
+//          }
+//        } ~ optionsSupport
+//      }
+//    }
+//  }
 
 
   val routes = {
@@ -93,8 +93,9 @@ object Startup extends App with JsonProtocols {
         pathPrefix("api" / regionMatcher) { regionSegment =>
           implicit val region = regionSegment.toLowerCase
 
-          summonerRoute ~
-          matchhistoryRoute
+          summonerRoute
+//          ~
+//          matchhistoryRoute
         }
       }
   }

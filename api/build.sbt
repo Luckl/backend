@@ -17,24 +17,26 @@ libraryDependencies ++= {
   val akkaStreamVersion = "1.0-M5"
   val scalaTestVersion = "2.2.1"
   val logbackVersion = "1.1.2"
-  val asyncHttpClientVersion = "1.9.25"
-  val jsonPathVersion: String = "0.6.4"
-  val jacksonCore: String = "2.5.3"
+  val jsonPathVersion = "0.6.4"
+  val jacksonCore = "2.5.3"
+  val mockitoVersion = "1.10.19"
 
   Seq(
     "com.typesafe.akka" %% "akka-actor" % akkaVersion,
+    "com.typesafe.akka" %% "akka-testkit" % akkaVersion,
     "com.typesafe.akka" %% "akka-remote" % akkaVersion,
     "com.typesafe.akka" %% "akka-slf4j" % akkaVersion,
     "com.typesafe.akka" %% "akka-stream-experimental" % akkaStreamVersion,
     "com.typesafe.akka" %% "akka-http-core-experimental" % akkaStreamVersion,
     "com.typesafe.akka" %% "akka-http-experimental" % akkaStreamVersion,
     "com.typesafe.akka" %% "akka-http-spray-json-experimental" % akkaStreamVersion,
-    "ch.qos.logback" % "logback-classic" % logbackVersion,
+    "ch.qos.logback"    % "logback-classic" % logbackVersion,
     "com.typesafe.akka" %% "akka-http-testkit-experimental" % akkaStreamVersion % "test",
     "org.scalatest"     %% "scalatest" % scalaTestVersion % "test",
-    "com.ning"          % "async-http-client" % asyncHttpClientVersion,
     "io.gatling"        % "jsonpath_2.11" % jsonPathVersion,
-    "com.fasterxml.jackson.core" % "jackson-databind" % jacksonCore
+    "com.fasterxml.jackson.core" % "jackson-databind" % jacksonCore,
+    "org.mockito"       % "mockito-all" % mockitoVersion
+
   )
 }
 
