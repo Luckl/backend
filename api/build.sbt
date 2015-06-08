@@ -14,7 +14,7 @@ resolvers += "Mvn repository" at "http://mvnrepository.com/artifact/"
 
 libraryDependencies ++= {
   val akkaVersion = "2.3.10"
-  val akkaStreamVersion = "1.0-M5"
+  val akkaStreamVersion = "1.0-RC3"
   val scalaTestVersion = "2.2.1"
   val logbackVersion = "1.1.2"
   val jsonPathVersion = "0.6.4"

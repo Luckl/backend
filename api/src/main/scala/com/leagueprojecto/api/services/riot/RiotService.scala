@@ -1,8 +1,8 @@
 package com.leagueprojecto.api.services.riot
 
 import akka.actor.{ActorSystem, Actor}
-import akka.http.Http
-import akka.http.model.{HttpResponse, HttpRequest}
+import akka.http.scaladsl.Http
+import akka.http.scaladsl.model.{HttpResponse, HttpRequest}
 import akka.stream.{ActorFlowMaterializer, FlowMaterializer}
 import akka.stream.scaladsl.{Flow, Sink, Source}
 
@@ -23,9 +23,7 @@ trait RiotService {
   implicit val materializer: FlowMaterializer = ActorFlowMaterializer()
 
   lazy val riotConnectionFlow: Flow[HttpRequest, HttpResponse, Any] =
-    Http(context.system).outgoingConnection("www.google.com", 443)
-//    Http(context.system).outgoingConnection(config.getString("riot.api-hostname"), config.getInt("riot.api-port"))
-
+    Http(context.system).outgoingConnectionTls(config.getString("riot.api-hostname"), config.getInt("riot.api-port"))
 
   def endpoint(region: String, service: String) =
     s"/api/lol/$region/$service?api_key=$api_key"

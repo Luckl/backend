@@ -2,11 +2,12 @@ package com.leagueprojecto.api.services.riot
 
 import akka.actor.Status.Failure
 import akka.actor.{ActorLogging, ActorRef, Props, Actor}
-import akka.http.client.RequestBuilding
-import akka.http.model.HttpHeader.ParsingResult
-import akka.http.model._
-import akka.http.model.HttpMethods.GET
-import akka.http.unmarshalling.Unmarshal
+import akka.http.scaladsl.client.RequestBuilding
+import akka.http.scaladsl.model.HttpHeader.ParsingResult
+import akka.http.scaladsl.model._
+import akka.http.scaladsl.model.StatusCodes._
+import akka.http.scaladsl.model.HttpMethods.GET
+import akka.http.scaladsl.unmarshalling.Unmarshal
 import com.leagueprojecto.api.JsonProtocols
 import com.leagueprojecto.api.domain.Summoner
 import com.leagueprojecto.api.services.riot.RiotService.{TooManyRequests, ServiceNotAvailable}
@@ -26,19 +27,20 @@ class SummonerService extends Actor with ActorLogging with RiotService with Json
     case GetSummonerByName(region, name) =>
       val origSender: ActorRef = sender()
 
-//      val endpoint1: Uri = endpoint(region, summonerByName + name)
-      val endpoint1 = "/"
+      val endpoint1: Uri = endpoint(region, summonerByName + name)
 
-      //HttpRequest(GET, endpoint1)
       val future = riotRequest(RequestBuilding.Get(endpoint1))
       future onSuccess {
-          case response: HttpResponse =>
-            Unmarshal(response.entity).to[String].onSuccess {
+          case HttpResponse(OK, _, entity, _) =>
+            Unmarshal(entity).to[String].onSuccess {
               case result: String =>
-                //val summoner = transform(result)
-                //origSender ! summoner
-              println("########################### " + result)
+                val summoner = transform(result.parseJson.asJsObject)
+                origSender ! summoner
             }
+          case HttpResponse(NotFound, _, _, _) =>
+            val message = s"No summoner found by name '$name' for region '$region'"
+            log.warning(message)
+            origSender ! Failure(new SummonerNotFound(message))
       }
       future onFailure {
         case x: Exception =>
